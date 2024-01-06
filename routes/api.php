@@ -21,6 +21,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 Route::group(['prefix' => 'lazyDog'], function () {
     Route::get('/', [DogController::class, 'lazyDog']);
+    Route::get('/{id}', [DogController::class, 'getDogById']);
     Route::post('dogs', [DogController::class, 'add']);
     Route::put('dogs/{id}', [DogController::class, 'update']);
     Route::patch('dogs/{id}', [DogController::class, 'update']);

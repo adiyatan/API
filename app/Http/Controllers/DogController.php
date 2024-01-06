@@ -14,6 +14,17 @@ class DogController extends Controller
         return response()->json($dogs);
     }
 
+    public function getDogById($id)
+    {
+        $dog = Dog::find($id);
+
+        if (!$dog) {
+            return response()->json(['message' => 'Dog not found'], 404);
+        }
+
+        return response()->json($dog);
+    }
+
     public function add(Request $request)
     {
         $request->validate([
