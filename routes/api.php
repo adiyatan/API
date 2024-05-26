@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DogController;
+use App\Http\Controllers\MemberTubesController;
 
 /*
 |--------------------------------------------------------------------------
@@ -26,4 +27,12 @@ Route::group(['prefix' => 'lazyDog'], function () {
     Route::put('dogs/{id}', [DogController::class, 'update']);
     Route::patch('dogs/{id}', [DogController::class, 'update']);
     Route::delete('dogs/{id}', [DogController::class, 'destroy']);
+});
+
+Route::group(['prefix' => 'mobiletubes'], function () {
+    Route::get('/member', [MemberTubesController::class, 'index']);
+    Route::get('/member/{id}', [MemberTubesController::class, 'getById']);
+    Route::post('/member', [MemberTubesController::class, 'create']);
+    Route::post('/member/{id}', [MemberTubesController::class, 'update']);
+    Route::delete('/member/{id}', [MemberTubesController::class, 'delete']);
 });
