@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\BookRequestController;
 use App\Http\Controllers\BookstubesController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -43,4 +44,10 @@ Route::group(['prefix' => 'mobiletubes'], function () {
     Route::post('/book', [BookstubesController::class, 'create']);
     Route::post('/book/{id}', [BookstubesController::class, 'update']);
     Route::delete('/book/{id}', [BookstubesController::class, 'delete']);
+    //book request
+    Route::get('/bookrequest', [BookRequestController::class, 'index']);
+    Route::get('/bookrequest/{id}', [BookRequestController::class, 'getById']);
+    Route::post('/bookrequest', [BookRequestController::class, 'create']);
+    Route::post('/bookrequest/{id}', [BookRequestController::class, 'update']);
+    Route::delete('/bookrequest/{id}', [BookRequestController::class, 'delete']);
 });
