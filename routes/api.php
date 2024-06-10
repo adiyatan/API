@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DogController;
 use App\Http\Controllers\MemberTubesController;
+use App\Http\Controllers\TelegramController;
 
 /*
 |--------------------------------------------------------------------------
@@ -51,3 +52,5 @@ Route::group(['prefix' => 'mobiletubes'], function () {
     Route::post('/bookrequest/{id}', [BookRequestController::class, 'update']);
     Route::delete('/bookrequest/{id}', [BookRequestController::class, 'delete']);
 });
+
+Route::post('/setWebHook', [TelegramController::class, 'handleWebhook']);
