@@ -31,15 +31,14 @@ class TelegramController extends Controller
     public function handleWebhook(Request $request)
     {
         $update = $request->all();
-        Log::info('Webhook received:', $update); // Add logging
+        Log::info('Webhook received:', $update);
 
         if (isset($update['poll'])) {
             $this->logPollData($update['poll']);
         }
 
         if (isset($update['poll_answer'])) {
-            // $this->logPollAnswer($update['poll_answer']); nyalakan nanti
-            $this->logMember($update['poll_answer']);
+            $this->logPollAnswer($update['poll_answer']);
         }
 
         if (isset($update['message'])) {
@@ -69,7 +68,7 @@ class TelegramController extends Controller
         $userId = $pollAnswer['user']['id'];
         $username = $pollAnswer['user']['username'] ?? null;
         $optionIds = $pollAnswer['option_ids'] ?? [0];
-        $chatId = $pollAnswer['chat']['id'] ?? null; // Ensure this data is available
+        $chatId = $pollAnswer['chat']['id'] ?? null;
 
         DB::table('poll_answers')->insert([
             'poll_id' => $pollId,
@@ -82,35 +81,63 @@ class TelegramController extends Controller
     }
 
     protected function logMember($pollAnswer)
-{
-    $pollId = $pollAnswer['poll_id'];
-    $userId = $pollAnswer['user']['id'];
-    $username = $pollAnswer['user']['username'] ?? null;
+    {
+        $pollId = $pollAnswer['poll_id'];
+        $userId = $pollAnswer['user']['id'];
+        $username = $pollAnswer['user']['username'] ?? null;
 
-    DB::table('members_bandung')->insert([
-        'poll_id' => $pollId,
-        'user_id' => $userId,
-        'username' => $username,
-        'date' => now(),
-    ]);
-}
+        // DB::table('members_bandung')->insert([
+        //     'poll_id' => $pollId,
+        //     'user_id' => $userId,
+        //     'username' => $username,
+        //     'date' => now(),
+        // ]);
 
+        // DB::table('members_jogja')->insert([
+        //     'poll_id' => $pollId,
+        //     'user_id' => $userId,
+        //     'username' => $username,
+        //     'date' => now(),
+        // ]);
+    }
 
     protected function handleMessage($message)
     {
-        if (isset($message['text']) && $message['text'] === '/set-member-bandung') {
-            $chatId = $message['chat']['id'];
-            $this->sendPoll($chatId);
+        $client = new Client();
+        if (isset($message['text'])) {
+            switch ($message['text']) {
+                case '/set-member-bandung':
+                    $chatId = $message['chat']['id'];
+                    $client->post('https://api.telegram.org/bot7495550754:AAGZlmFRYn8rpvk4yGNQhrlEJFBq8p0aIOk/' . 'sendMessage', [
+                        'json' => [
+                            'chat_id' => $chatId,
+                            'text' => 'anda bukan admin, undang @adiyatan terlebih dahulu'
+                        ]
+                    ]);
+                    // $this->sendPoll($chatId, 'Mohon isi vote "daftar" agar terdeteksi absensi', 'bandung');
+                    break;
+
+                case '/set-member-jogja':
+                    $chatId = $message['chat']['id'];
+                    $client->post('https://api.telegram.org/bot7495550754:AAGZlmFRYn8rpvk4yGNQhrlEJFBq8p0aIOk/' . 'sendMessage', [
+                        'json' => [
+                            'chat_id' => $chatId,
+                            'text' => 'anda bukan admin, undang @adiyatan terlebih dahulu'
+                        ]
+                    ]);
+                    // $this->sendPoll($chatId, 'Mohon isi vote "daftar" agar terdeteksi absensi', 'jogja');
+                    break;
+            }
         }
     }
 
-    protected function sendPoll($chatId)
+    protected function sendPoll($chatId, $question, $location)
     {
         $client = new Client();
-        $response = $client->post('https://api.telegram.org/bot7495550754:AAGZlmFRYn8rpvk4yGNQhrlEJFBq8p0aIOk/' . 'sendPoll', [
+        $response = $client->post($this->telegramApiUrl . 'sendPoll', [
             'json' => [
                 'chat_id' => $chatId,
-                'question' => 'Mohon isi vote "daftar" agar terdeteksi absensi',
+                'question' => $question,
                 'options' => ['daftar', 'jangan tekan disini'],
                 'is_anonymous' => false
             ]
@@ -118,9 +145,9 @@ class TelegramController extends Controller
 
         $responseBody = json_decode($response->getBody(), true);
         $pollId = $responseBody['result']['poll']['id'];
-        Log::info('Poll sent:', ['chat_id' => $chatId, 'poll_id' => $pollId]);
+        Log::info('Poll sent:', ['chat_id' => $chatId, 'poll_id' => $pollId, 'location' => $location]);
 
-        $messageResponse = $client->post('https://api.telegram.org/bot7495550754:AAGZlmFRYn8rpvk4yGNQhrlEJFBq8p0aIOk/sendMessage', [
+        $messageResponse = $client->post($this->telegramApiUrl . 'sendMessage', [
             'json' => [
                 'chat_id' => $chatId,
                 'text' => 'vote akan di tutup 1 jam setelah pengiriman'
