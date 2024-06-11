@@ -68,12 +68,10 @@ class TelegramController extends Controller
         $userId = $pollAnswer['user']['id'];
         $username = $pollAnswer['user']['username'] ?? null;
         $optionIds = $pollAnswer['option_ids'] ?? [0];
-        $chatId = $pollAnswer['chat']['id'] ?? null;
 
         DB::table('poll_answers')->insert([
             'poll_id' => $pollId,
             'user_id' => $userId,
-            'chat_id' => $chatId,
             'username' => $username,
             'option_ids' => json_encode($optionIds),
             'date' => now(),
