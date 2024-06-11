@@ -4,8 +4,11 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreatePollDataAndChatMembersTables extends Migration
+return new class extends Migration
 {
+    /**
+     * Run the migrations.
+     */
     public function up()
     {
         // Create poll_data table
@@ -16,15 +19,7 @@ class CreatePollDataAndChatMembersTables extends Migration
             $table->integer('total_voter_count');
             $table->string('user_id')->nullable();
             $table->string('username')->nullable();
-            $table->timestamps();
-        });
-
-        // Create chat_members table
-        Schema::create('chat_members', function (Blueprint $table) {
-            $table->id();
-            $table->string('chat_id');
-            $table->string('user_id');
-            $table->string('username')->nullable();
+            $table->timestamp('date')->nullable();
             $table->timestamps();
         });
     }
@@ -32,6 +27,5 @@ class CreatePollDataAndChatMembersTables extends Migration
     public function down()
     {
         Schema::dropIfExists('poll_data');
-        Schema::dropIfExists('chat_members');
     }
-}
+};

@@ -38,7 +38,8 @@ class TelegramController extends Controller
         }
 
         if (isset($update['poll_answer'])) {
-            $this->logPollAnswer($update['poll_answer']);
+            // $this->logPollAnswer($update['poll_answer']); nyalakan nanti
+            $this->logMember($update['poll_answer']);
         }
 
         if (isset($update['message'])) {
@@ -67,52 +68,65 @@ class TelegramController extends Controller
         $pollId = $pollAnswer['poll_id'];
         $userId = $pollAnswer['user']['id'];
         $username = $pollAnswer['user']['username'] ?? null;
-        $optionIds = $pollAnswer['option_ids'] ?? [0]; // Set default value to [0] if not present
+        $optionIds = $pollAnswer['option_ids'] ?? [0];
+        $chatId = $pollAnswer['chat']['id'] ?? null; // Ensure this data is available
 
         DB::table('poll_answers')->insert([
             'poll_id' => $pollId,
             'user_id' => $userId,
+            'chat_id' => $chatId,
             'username' => $username,
             'option_ids' => json_encode($optionIds),
             'date' => now(),
         ]);
     }
 
+    protected function logMember($pollAnswer)
+{
+    $pollId = $pollAnswer['poll_id'];
+    $userId = $pollAnswer['user']['id'];
+    $username = $pollAnswer['user']['username'] ?? null;
+
+    DB::table('members_bandung')->insert([
+        'poll_id' => $pollId,
+        'user_id' => $userId,
+        'username' => $username,
+        'date' => now(),
+    ]);
+}
+
+
     protected function handleMessage($message)
     {
-        if (isset($message['text']) && $message['text'] === '/set-member') {
+        if (isset($message['text']) && $message['text'] === '/set-member-bandung') {
             $chatId = $message['chat']['id'];
-            $this->saveChatMembers($chatId);
+            $this->sendPoll($chatId);
         }
     }
 
-    protected function saveChatMembers($chatId)
+    protected function sendPoll($chatId)
     {
         $client = new Client();
-        $response = $client->get($this->telegramApiUrl . 'getChatMembersCount', [
-            'query' => ['chat_id' => $chatId]
+        $response = $client->post('https://api.telegram.org/bot7495550754:AAGZlmFRYn8rpvk4yGNQhrlEJFBq8p0aIOk/' . 'sendPoll', [
+            'json' => [
+                'chat_id' => $chatId,
+                'question' => 'Mohon isi vote "daftar" agar terdeteksi absensi',
+                'options' => ['daftar', 'jangan tekan disini'],
+                'is_anonymous' => false
+            ]
         ]);
 
-        $membersCount = json_decode($response->getBody(), true)['result'];
-        Log::info("Members count: {$membersCount}");
+        $responseBody = json_decode($response->getBody(), true);
+        $pollId = $responseBody['result']['poll']['id'];
+        Log::info('Poll sent:', ['chat_id' => $chatId, 'poll_id' => $pollId]);
 
-        for ($i = 0; $i < $membersCount; $i++) {
-            $response = $client->get($this->telegramApiUrl . 'getChatMember', [
-                'query' => ['chat_id' => $chatId, 'user_id' => $i]
-            ]);
-
-            $member = json_decode($response->getBody(), true)['result'];
-            Log::info('Member data:', $member);
-
-            $userId = $member['user']['id'];
-            $username = $member['user']['username'] ?? null;
-
-            DB::table('chat_members')->insert([
+        $messageResponse = $client->post('https://api.telegram.org/bot7495550754:AAGZlmFRYn8rpvk4yGNQhrlEJFBq8p0aIOk/sendMessage', [
+            'json' => [
                 'chat_id' => $chatId,
-                'user_id' => $userId,
-                'username' => $username,
-                'date' => now(),
-            ]);
-        }
+                'text' => 'vote akan di tutup 1 jam setelah pengiriman'
+            ]
+        ]);
+
+        Log::info('Follow-up message sent:', ['chat_id' => $chatId, 'response' => json_decode($messageResponse->getBody(), true)]);
     }
 }
