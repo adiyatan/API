@@ -36,15 +36,20 @@ class TelegramController extends Controller
         $cekAdd = null;
 
         if ($chatId) {
-            $cekAdd = DB::table('check_add')->where('chat_id', $chatId)->value('isAddMember');
+            $cekAdd = DB::table('check_add')->where('chat_id', $chatId)->exists();
+            Log::info('cek Add bernilai: ' . ($cekAdd ? 'true' : 'false'));
         }
 
         if (isset($update['poll'])) {
             $this->logPollData($update['poll']);
         }
 
-        if (isset($update['poll_answer'])) {
-            $cekAdd ? $this->logMember($update['poll_answer']) : $this->logPollAnswer($update['poll_answer']);
+        if (isset($update['poll_answer']) && $cekAdd) {
+            $this->logMember($update['poll_answer']);
+        }
+
+        if (isset($update['poll_answer']) && !$cekAdd) {
+            $this->logPollAnswer($update['poll_answer']);
         }
 
         if (isset($update['message'])) {
@@ -84,8 +89,12 @@ class TelegramController extends Controller
             'username' => $pollAnswer['user']['username'] ?? null,
         ];
 
-        DB::table('members_bandung')->insert($data);
-        DB::table('members_jogja')->insert($data);
+        $chatId = $this->getChatIdByPollId($pollAnswer['poll_id']);
+        if ($chatId == -4271797620) {
+            DB::table('members_bandung')->insert($data);
+        } else {
+            DB::table('members_jogja')->insert($data);
+        }
     }
 
     protected function handleMessage($message)
@@ -111,7 +120,11 @@ class TelegramController extends Controller
             $this->sendPoll($chatId, 'Mohon isi vote "daftar" agar terdeteksi absensi', $location, $client);
             DB::table('check_add')->updateOrInsert(
                 ['chat_id' => $chatId],
-                ['isAddMember' => true]
+                [
+                    'isAddMember' => true,
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ]
             );
         }
     }
