@@ -54,9 +54,9 @@ class TelegramController extends Controller
         $options = $poll['options'];
         $totalVoterCount = $poll['total_voter_count'];
         $chat_id = DB::table('poll_data')
-        ->where('poll_id', $pollId)
-        ->whereNotNull('chat_id')
-        ->value('chat_id');
+            ->where('poll_id', $pollId)
+            ->whereNotNull('chat_id')
+            ->value('chat_id');
 
         DB::table('poll_data')->insert([
             'poll_id' => $pollId,
@@ -74,9 +74,9 @@ class TelegramController extends Controller
         $username = $pollAnswer['user']['username'] ?? null;
         $optionIds = $pollAnswer['option_ids'] ?? [0];
         $chat_id = DB::table('poll_data')
-        ->where('poll_id', $pollId)
-        ->whereNotNull('chat_id')
-        ->value('chat_id');
+            ->where('poll_id', $pollId)
+            ->whereNotNull('chat_id')
+            ->value('chat_id');
 
         DB::table('poll_answers')->insert([
             'poll_id' => $pollId,
@@ -93,15 +93,15 @@ class TelegramController extends Controller
         $userId = $pollAnswer['user']['id'];
         $username = $pollAnswer['user']['username'] ?? null;
 
-        // DB::table('members_bandung')->insert([
-        //     'user_id' => $userId,
-        //     'username' => $username,
-        // ]);
+        DB::table('members_bandung')->insert([
+            'user_id' => $userId,
+            'username' => $username,
+        ]);
 
-        // DB::table('members_jogja')->insert([
-        //     'user_id' => $userId,
-        //     'username' => $username,
-        // ]);
+        DB::table('members_jogja')->insert([
+            'user_id' => $userId,
+            'username' => $username,
+        ]);
     }
 
     protected function handleMessage($message)
@@ -111,24 +111,34 @@ class TelegramController extends Controller
             switch ($message['text']) {
                 case '/set-member-bandung':
                     $chatId = $message['chat']['id'];
-                    $client->post('https://api.telegram.org/bot7495550754:AAGZlmFRYn8rpvk4yGNQhrlEJFBq8p0aIOk/' . 'sendMessage', [
-                        'json' => [
-                            'chat_id' => $chatId,
-                            'text' => 'anda bukan admin, undang @adiyatan terlebih dahulu'
-                        ]
-                    ]);
-                    // $this->sendPoll($chatId, 'Mohon isi vote "daftar" agar terdeteksi absensi', 'bandung');
+                    $currentHour = date('H');
+
+                    if ($currentHour < 12) {
+                        $client->post('https://api.telegram.org/bot7495550754:AAGZlmFRYn8rpvk4yGNQhrlEJFBq8p0aIOk/' . 'sendMessage', [
+                            'json' => [
+                                'chat_id' => $chatId,
+                                'text' => 'Set member hanya bisa dilakukan setelah jam 12 siang'
+                            ]
+                        ]);
+                    } else {
+                        $this->sendPoll($chatId, 'Mohon isi vote "daftar" agar terdeteksi absensi', 'bandung');
+                    }
                     break;
 
                 case '/set-member-jogja':
                     $chatId = $message['chat']['id'];
-                    $client->post('https://api.telegram.org/bot7495550754:AAGZlmFRYn8rpvk4yGNQhrlEJFBq8p0aIOk/' . 'sendMessage', [
-                        'json' => [
-                            'chat_id' => $chatId,
-                            'text' => 'anda bukan admin, undang @adiyatan terlebih dahulu'
-                        ]
-                    ]);
-                    // $this->sendPoll($chatId, 'Mohon isi vote "daftar" agar terdeteksi absensi', 'jogja');
+                    $currentHour = date('H');
+
+                    if ($currentHour < 12) {
+                        $client->post('https://api.telegram.org/bot7495550754:AAGZlmFRYn8rpvk4yGNQhrlEJFBq8p0aIOk/' . 'sendMessage', [
+                            'json' => [
+                                'chat_id' => $chatId,
+                                'text' => 'Set member hanya bisa dilakukan setelah jam 12 siang'
+                            ]
+                        ]);
+                    } else {
+                        $this->sendPoll($chatId, 'Mohon isi vote "daftar" agar terdeteksi absensi', 'jogja');
+                    }
                     break;
             }
         }
