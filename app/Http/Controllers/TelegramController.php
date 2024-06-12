@@ -35,20 +35,26 @@ class TelegramController extends Controller
         $chatId = $update['message']['chat']['id'] ?? null;
         $cekAdd = null;
 
+        $pollId = $update['poll_answer']['poll_id'] ?? null;
+        if ($pollId) {
+            $chatId = $this->getChatIdByPollId($pollId);
+        }
+
         if ($chatId) {
             $cekAdd = DB::table('check_add')->where('chat_id', $chatId)->exists();
             Log::info('cek Add bernilai: ' . ($cekAdd ? 'true' : 'false'));
+            $cekAdd = $cekAdd ? 'true' : 'false';
         }
 
         if (isset($update['poll'])) {
             $this->logPollData($update['poll']);
         }
 
-        if (isset($update['poll_answer']) && !$cekAdd) {
+        if (isset($update['poll_answer']) && $cekAdd == 'false') {
             $this->logMember($update['poll_answer']);
         }
 
-        if (isset($update['poll_answer']) && $cekAdd) {
+        if (isset($update['poll_answer']) && $cekAdd == 'true') {
             $this->logPollAnswer($update['poll_answer']);
         }
 
