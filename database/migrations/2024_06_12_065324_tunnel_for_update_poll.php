@@ -11,7 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        //
+        Schema::create('check_add', function (Blueprint $table) {
+            $table->id();
+            $table->bigInteger('chat_id');
+            $table->boolean('isAddMember')->nullable();
+            $table->timestamps();
+        });
     }
 
     /**
@@ -19,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        //
+        Schema::dropIfExists('check_add');
     }
 };
