@@ -53,12 +53,17 @@ class TelegramController extends Controller
         $pollId = $poll['id'];
         $options = $poll['options'];
         $totalVoterCount = $poll['total_voter_count'];
+        $chat_id = DB::table('poll_data')
+        ->where('poll_id', $pollId)
+        ->whereNotNull('chat_id')
+        ->value('chat_id');
 
         DB::table('poll_data')->insert([
             'poll_id' => $pollId,
             'options' => json_encode($options),
             'total_voter_count' => $totalVoterCount,
             'date' => now(),
+            'chat_id' => $chat_id,
         ]);
     }
 
@@ -68,6 +73,10 @@ class TelegramController extends Controller
         $userId = $pollAnswer['user']['id'];
         $username = $pollAnswer['user']['username'] ?? null;
         $optionIds = $pollAnswer['option_ids'] ?? [0];
+        $chat_id = DB::table('poll_data')
+        ->where('poll_id', $pollId)
+        ->whereNotNull('chat_id')
+        ->value('chat_id');
 
         DB::table('poll_answers')->insert([
             'poll_id' => $pollId,
@@ -75,6 +84,7 @@ class TelegramController extends Controller
             'username' => $username,
             'option_ids' => json_encode($optionIds),
             'date' => now(),
+            'chat_id' => $chat_id,
         ]);
     }
 

@@ -17,9 +17,8 @@ return new class extends Migration
             $table->string('poll_id');
             $table->json('options');
             $table->integer('total_voter_count');
-            $table->string('user_id')->nullable();
-            $table->string('username')->nullable();
             $table->timestamp('date')->nullable();
+            $table->timestamp('chat_id')->nullable();
             $table->timestamps();
         });
     }
