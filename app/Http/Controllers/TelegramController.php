@@ -44,11 +44,11 @@ class TelegramController extends Controller
             $this->logPollData($update['poll']);
         }
 
-        if (isset($update['poll_answer']) && $cekAdd) {
+        if (isset($update['poll_answer']) && !$cekAdd) {
             $this->logMember($update['poll_answer']);
         }
 
-        if (isset($update['poll_answer']) && !$cekAdd) {
+        if (isset($update['poll_answer']) && $cekAdd) {
             $this->logPollAnswer($update['poll_answer']);
         }
 
@@ -90,7 +90,7 @@ class TelegramController extends Controller
         ];
 
         $chatId = $this->getChatIdByPollId($pollAnswer['poll_id']);
-        if ($chatId == -4271797620) {
+        if ($chatId == -1001309342664) {
             DB::table('members_bandung')->insert($data);
         } else {
             DB::table('members_jogja')->insert($data);
