@@ -15,10 +15,10 @@ return new class extends Migration
         Schema::create('poll_data', function (Blueprint $table) {
             $table->id();
             $table->string('poll_id');
+            $table->string('chat_id')->nullable();
             $table->json('options');
             $table->integer('total_voter_count');
             $table->timestamp('date')->nullable();
-            $table->timestamp('chat_id')->nullable();
             $table->timestamps();
         });
     }
