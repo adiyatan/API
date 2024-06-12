@@ -109,7 +109,29 @@ class TelegramController extends Controller
                 $location = $message['text'] === '/set-member-bandung' ? 'bandung' : 'jogja';
                 $this->handleSetMember($chatId, $currentHour, $location, $client);
                 break;
+            case '/cek-member-bandung':
+            case '/cek-member-jogja':
+                $location = $message['text'] === '/cek-member-bandung' ? 'bandung' : 'jogja';
+                $this->handleCekMember($chatId, $location, $client);
+                break;
         }
+    }
+
+    protected function handleCekMember($chatId, $location, $client)
+    {
+        $tableName = $location === 'bandung' ? 'members_bandung' : 'members_jogja';
+        $members = DB::table($tableName)->get(['user_id', 'username'])->toArray();
+
+        $messageText = "Daftar member $location:\n";
+        foreach ($members as $member) {
+            $messageText .= "User ID: {$member->user_id}, Username: {$member->username}\n";
+        }
+
+        if (empty($members)) {
+            $messageText = "Tidak ada member yang terdaftar di $location.";
+        }
+
+        $this->sendMessage($client, $chatId, $messageText);
     }
 
     protected function handleSetMember($chatId, $currentHour, $location, $client)
