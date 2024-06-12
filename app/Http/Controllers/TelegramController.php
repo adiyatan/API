@@ -90,22 +90,17 @@ class TelegramController extends Controller
 
     protected function logMember($pollAnswer)
     {
-        $pollId = $pollAnswer['poll_id'];
         $userId = $pollAnswer['user']['id'];
         $username = $pollAnswer['user']['username'] ?? null;
 
         // DB::table('members_bandung')->insert([
-        //     'poll_id' => $pollId,
         //     'user_id' => $userId,
         //     'username' => $username,
-        //     'date' => now(),
         // ]);
 
         // DB::table('members_jogja')->insert([
-        //     'poll_id' => $pollId,
         //     'user_id' => $userId,
         //     'username' => $username,
-        //     'date' => now(),
         // ]);
     }
 

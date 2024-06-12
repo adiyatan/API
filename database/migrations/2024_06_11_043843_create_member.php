@@ -13,10 +13,8 @@ return new class extends Migration
     {
         Schema::create('members_bandung', function (Blueprint $table) {
             $table->id();
-            $table->string('poll_id');
             $table->bigInteger('user_id');
             $table->string('username')->nullable();
-            $table->timestamp('date')->useCurrent();
             $table->timestamps();
         });
     }
