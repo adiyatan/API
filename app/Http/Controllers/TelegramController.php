@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
@@ -13,8 +14,7 @@ class TelegramController extends Controller
 
     public function __construct()
     {
-        $this->apiToken = env('7495550754:AAGZlmFRYn8rpvk4yGNQhrlEJFBq8p0aIOk');
-        $this->telegramApiUrl = "https://api.telegram.org/bot{$this->apiToken}/";
+        $this->telegramApiUrl = "https://api.telegram.org/bot7495550754:AAGZlmFRYn8rpvk4yGNQhrlEJFBq8p0aIOk/";
     }
 
     public function setWebhook()
@@ -33,9 +33,10 @@ class TelegramController extends Controller
         Log::info('Webhook received:', $update);
 
         $chatId = $update['message']['chat']['id'] ?? null;
+        $cekAdd = null;
 
         if ($chatId) {
-            $cekAdd = DB::table('check_add')->where('chat_id', $chatId)->first();
+            $cekAdd = DB::table('check_add')->where('chat_id', $chatId)->value('isAddMember');
         }
 
         if (isset($update['poll'])) {
@@ -104,7 +105,7 @@ class TelegramController extends Controller
 
     protected function handleSetMember($chatId, $currentHour, $location, $client)
     {
-        if ($currentHour < 12) {
+        if ($currentHour < 5) {
             $this->sendMessage($client, $chatId, 'Set member hanya bisa dilakukan setelah jam 12 siang');
         } else {
             $this->sendPoll($chatId, 'Mohon isi vote "daftar" agar terdeteksi absensi', $location, $client);
@@ -126,10 +127,15 @@ class TelegramController extends Controller
             ]
         ]);
 
-        $pollId = json_decode($response->getBody(), true)['result']['poll']['id'];
-        Log::info('Poll sent:', ['chat_id' => $chatId, 'poll_id' => $pollId, 'location' => $location]);
+        DB::table('poll_data')->insert([
+            'poll_id' => json_decode($response->getBody(), true)['result']['poll']['id'],
+            'options' => json_encode(['daftar', 'jangan tekan disini']),
+            'date' => now(),
+            'total_voter_count' => 0,
+            'chat_id' => $chatId,
+        ]);
 
-        $this->sendMessage($client, $chatId, 'vote akan di tutup 1 jam setelah pengiriman');
+        $this->sendMessage($client, $chatId, 'Dimohon agar mengisi vote secara benar, Jangan isi vote "jangan tekan disini"!');
     }
 
     protected function sendMessage($client, $chatId, $text)
