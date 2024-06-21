@@ -11,10 +11,12 @@ class TelegramController extends Controller
 {
     protected $telegramApiUrl;
     protected $apiToken;
+    protected $openAIApiToken;
 
     public function __construct()
     {
-        $this->telegramApiUrl = "https://api.telegram.org/bot7495550754:AAGZlmFRYn8rpvk4yGNQhrlEJFBq8p0aIOk/";
+        $this->telegramApiUrl = "https://api.telegram.org/bot7495550754:AAFgq5KcvBWLj1zFUODaeam5dy0haoWxhsE/";
+        $this->openAIApiToken = "sk-proj-bMrmGws85N4mo39NbhY2T3BlbkFJ7h58tMDT9zu5SN8zG9Hu";
     }
 
     public function setWebhook()
@@ -109,17 +111,31 @@ class TelegramController extends Controller
         $currentHour = date('H');
         $client = new Client();
 
-        switch ($message['text']) {
-            case '/set-member-bandung':
-            case '/set-member-jogja':
-                $location = $message['text'] === '/set-member-bandung' ? 'bandung' : 'jogja';
-                $this->handleSetMember($chatId, $currentHour, $location, $client);
-                break;
-            case '/cek-member-bandung':
-            case '/cek-member-jogja':
-                $location = $message['text'] === '/cek-member-bandung' ? 'bandung' : 'jogja';
-                $this->handleCekMember($chatId, $location, $client);
-                break;
+        if (isset($message['text'])) {
+            switch ($message['text']) {
+                case '/set-member-bandung':
+                case '/set-member-jogja':
+                    $location = $message['text'] === '/set-member-bandung' ? 'bandung' : 'jogja';
+                    $this->handleSetMember($chatId, $currentHour, $location, $client);
+                    break;
+                case '/cek-member-bandung':
+                case '/cek-member-jogja':
+                    $location = $message['text'] === '/cek-member-bandung' ? 'bandung' : 'jogja';
+                    $this->handleCekMember($chatId, $location, $client);
+                    break;
+                default:
+                    // Handle other messages with GPT-3.5
+                    $responseText = $this->getGPT3Response($message['text']);
+                    $this->sendMessage($client, $chatId, $responseText);
+                    break;
+            }
+        }
+
+        // Check if the 'text' key exists in the message
+        if (isset($message['text']) && stripos($message['text'], 'jacob') !== false) {
+            $responseText = $this->getGPT3Response($message['text']);
+            $this->sendMessage($client, $chatId, $responseText);
+            return;
         }
     }
 
@@ -192,5 +208,27 @@ class TelegramController extends Controller
     protected function getChatIdByPollId($pollId)
     {
         return DB::table('poll_data')->where('poll_id', $pollId)->whereNotNull('chat_id')->value('chat_id');
+    }
+
+    protected function getGPT3Response($messageText)
+    {
+        $client = new Client();
+        $response = $client->post('https://api.openai.com/v1/chat/completions', [
+            'headers' => [
+                'Authorization' => 'Bearer ' . $this->openAIApiToken,
+                'Content-Type' => 'application/json',
+            ],
+            'json' => [
+                'model' => 'gpt-3.5-turbo',
+                'messages' => [
+                    ['role' => 'system', 'content' => 'You are a helpful assistant.'],
+                    ['role' => 'user', 'content' => $messageText],
+                ],
+                'max_tokens' => 150,
+            ],
+        ]);
+
+        $responseBody = json_decode($response->getBody(), true);
+        return $responseBody['choices'][0]['message']['content'] ?? 'Sorry, I could not generate a response.';
     }
 }
